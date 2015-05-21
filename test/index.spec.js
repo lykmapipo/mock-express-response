@@ -241,6 +241,19 @@ describe('MockExpressResponse', function() {
     });
 
 
+    it('should be able to transfer the file at the given `path`', function(done) {
+        var response = new MockExpressResponse();
+        response
+            .sendFile(path.join(__dirname, 'template.ejs'), function(error, result) {
+                console.log(error);
+                console.log(result);
+                // console.log(response);
+
+                done();
+            });
+    });
+
+
     it('should be able to add `field` to Vary', function(done) {
         var response = new MockExpressResponse();
         response.vary('w');

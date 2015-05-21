@@ -24,7 +24,7 @@ var response = new MockExpressResponse();
 
 // With options
 var response = new MockExpressResponse({
-    render:ejs.renderFile, //use ejs as render engine
+    render: ejs.renderFile, //use ejs as template engine
     request: new MockExpressRequest({
     //request options
     ...
@@ -55,6 +55,10 @@ var result = response._getString();
 ...
 
 ```
+
+## TODO
+- [ ] File send mock
+
 
 ## Testing
 * Clone this repository

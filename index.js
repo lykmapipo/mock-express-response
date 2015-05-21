@@ -4,6 +4,7 @@
 //dependencies
 var path = require('path');
 var contentDisposition = require('content-disposition');
+var onFinished = require('on-finished');
 var escapeHtml = require('escape-html');
 var merge = require('utils-merge');
 var Utils = require(path.join(__dirname, 'utils'));
@@ -17,6 +18,7 @@ var deprecate = require('depd')('mock-express-response');
 var setCharset = Utils.setCharset;
 var normalizeType = Utils.normalizeType;
 var normalizeTypes = Utils.normalizeTypes;
+var isAbsolute = Utils.isAbsolute;
 var vary = require('vary');
 var sign = require('cookie-signature').sign;
 var cookie = require('cookie');
@@ -359,7 +361,114 @@ MockExpressResponse.prototype.sendStatus = function sendStatus(statusCode) {
 };
 
 
-//TODO fix this
+// pipe the send file stream
+function sendfile(res, file, options, callback) {
+    var done = false;
+    var streaming;
+
+    // request aborted
+    function onaborted() {
+        if (done) {
+            return;
+        }
+        done = true;
+
+        var err = new Error('Request aborted');
+        err.code = 'ECONNABORTED';
+        callback(err);
+    }
+
+    // directory
+    function ondirectory() {
+        if (done) {
+            return;
+        }
+        done = true;
+
+        var err = new Error('EISDIR, read');
+        err.code = 'EISDIR';
+        callback(err);
+    }
+
+    // errors
+    function onerror(err) {
+        if (done) {
+            return;
+        }
+        done = true;
+        callback(err);
+    }
+
+    // ended
+    function onend() {
+        if (done) {
+            return;
+        }
+        done = true;
+        callback();
+    }
+
+    // file
+    function onfile() {
+        streaming = false;
+    }
+
+    // finished
+    function onfinish(err) {
+        if (err && err.code === 'ECONNRESET') {
+            return onaborted();
+        }
+        if (err) {
+            return onerror(err);
+        }
+        if (done) {
+            return;
+        }
+
+        setImmediate(function() {
+            if (streaming !== false && !done) {
+                onaborted();
+                return;
+            }
+
+            if (done) {
+                return;
+            }
+            done = true;
+            callback();
+        });
+    }
+
+    // streaming
+    function onstream() {
+        streaming = true;
+    }
+
+    file.on('directory', ondirectory);
+    file.on('end', onend);
+    file.on('error', onerror);
+    file.on('file', onfile);
+    file.on('stream', onstream);
+    onFinished(res, onfinish);
+
+    if (options.headers) {
+        // set headers on successful transfer
+        file.on('headers', function headers(res) {
+            var obj = options.headers;
+            var keys = Object.keys(obj);
+
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                res.setHeader(k, obj[k]);
+            }
+        });
+    }
+
+    // pipe
+    file.pipe(res);
+}
+
+
 /**
  * Transfer the file at the given `path`.
  *
@@ -400,46 +509,47 @@ MockExpressResponse.prototype.sendStatus = function sendStatus(statusCode) {
  *
  * @api public
  */
-// MockExpressResponse.prototype.sendFile = function sendFile(path, options, fn) {
-//     var req = this.req;
-//     var res = this;
-//     var next = req.next;
+MockExpressResponse.prototype.sendFile = function sendFile(path, options, fn) {
+    var req = this.req;
+    var res = this;
+    var next = req.next;
 
-//     if (!path) {
-//         throw new TypeError('path argument is required to res.sendFile');
-//     }
+    if (!path) {
+        throw new TypeError('path argument is required to res.sendFile');
+    }
 
-//     // support function as second arg
-//     if (typeof options === 'function') {
-//         fn = options;
-//         options = {};
-//     }
+    // support function as second arg
+    if (typeof options === 'function') {
+        fn = options;
+        options = {};
+    }
 
-//     options = options || {};
+    options = options || {};
 
-//     if (!options.root && !isAbsolute(path)) {
-//         throw new TypeError('path must be absolute or specify root to res.sendFile');
-//     }
+    if (!options.root && !isAbsolute(path)) {
+        throw new TypeError('path must be absolute or specify root to res.sendFile');
+    }
 
-//     // create file stream
-//     var pathname = encodeURI(path);
-//     var file = send(req, pathname, options);
+    // create file stream
+    var pathname = encodeURI(path);
+    var file = send(req, pathname, options);
 
-//     // transfer
-//     sendfile(res, file, options, function(err) {
-//         if (fn) {
-//             return fn(err);
-//         }
-//         if (err && err.code === 'EISDIR') {
-//             return next();
-//         }
+    // transfer
+    sendfile(res, file, options, function(err) {
+        if (fn) {
+            return fn(err);
+        }
+        if (err && err.code === 'EISDIR') {
+            return next();
+        }
 
-//         // next() all but write errors
-//         if (err && err.code !== 'ECONNABORTED' && err.syscall !== 'write') {
-//             next(err);
-//         }
-//     });
-// };
+        // next() all but write errors
+        if (err && err.code !== 'ECONNABORTED' && err.syscall !== 'write') {
+            next(err);
+        }
+    });
+};
+
 
 // /**
 //  * Transfer the file at the given `path`.
@@ -990,99 +1100,6 @@ MockExpressResponse.prototype.render = function(view, options, fn) {
     // render
     app.render(view, options, fn);
 };
-
-
-// // pipe the send file stream
-// function sendfile(res, file, options, callback) {
-//   var done = false;
-//   var streaming;
-
-//   // request aborted
-//   function onaborted() {
-//     if (done) return;
-//     done = true;
-
-//     var err = new Error('Request aborted');
-//     err.code = 'ECONNABORTED';
-//     callback(err);
-//   }
-
-//   // directory
-//   function ondirectory() {
-//     if (done) return;
-//     done = true;
-
-//     var err = new Error('EISDIR, read');
-//     err.code = 'EISDIR';
-//     callback(err);
-//   }
-
-//   // errors
-//   function onerror(err) {
-//     if (done) return;
-//     done = true;
-//     callback(err);
-//   }
-
-//   // ended
-//   function onend() {
-//     if (done) return;
-//     done = true;
-//     callback();
-//   }
-
-//   // file
-//   function onfile() {
-//     streaming = false;
-//   }
-
-//   // finished
-//   function onfinish(err) {
-//     if (err && err.code === 'ECONNRESET') return onaborted();
-//     if (err) return onerror(err);
-//     if (done) return;
-
-//     setImmediate(function () {
-//       if (streaming !== false && !done) {
-//         onaborted();
-//         return;
-//       }
-
-//       if (done) return;
-//       done = true;
-//       callback();
-//     });
-//   }
-
-//   // streaming
-//   function onstream() {
-//     streaming = true;
-//   }
-
-//   file.on('directory', ondirectory);
-//   file.on('end', onend);
-//   file.on('error', onerror);
-//   file.on('file', onfile);
-//   file.on('stream', onstream);
-//   onFinished(res, onfinish);
-
-//   if (options.headers) {
-//     // set headers on successful transfer
-//     file.on('headers', function headers(res) {
-//       var obj = options.headers;
-//       var keys = Object.keys(obj);
-
-//       for (var i = 0; i < keys.length; i++) {
-//         var k = keys[i];
-//         res.setHeader(k, obj[k]);
-//       }
-//     });
-//   }
-
-//   // pipe
-//   file.pipe(res);
-// }
-
 
 
 /**
