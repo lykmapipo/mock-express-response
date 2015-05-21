@@ -48,7 +48,7 @@
         "jshint-stylish": "^1.0.1",
         "lodash": "^3.9.1",
         "mocha": "^2.2.4",
-        "mock-express-request": "^0.1.0"
+        "mock-express-request": "^0.1.1"
     },
     "dependencies": {
         "content-disposition": "^0.5.0",
@@ -67,6 +67,6 @@
         "vary": "^1.0.0"
     },
     "peerDependencies": {
-        "mock-express-request": "^0.1.0"
+        "mock-express-request": "^0.1.1"
     }
 }

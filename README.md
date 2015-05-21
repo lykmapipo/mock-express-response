@@ -4,6 +4,8 @@
 
 Nodejs library to mock [expressjs](https://github.com/strongloop/express/) http response based on [mock-res](https://github.com/diachedelic/mock-res)
 
+See [mock-express-request](https://github.com/lykmapipo/mock-express-request) to mock express http request.
+
 *Note: The mocked response instance have the same properties and methods as an instance of express http response*
 
 ## Installation
@@ -29,9 +31,15 @@ var response = new MockExpressResponse({
 });
 
 //express response methods
+//and properties
+
+//send json response
 response.json({user:{active:true}})
+
+//send a response
 response.send('<p>Hi</p>')
-//etc
+
+...
 
 //to obtain json response
 var result = response._getJSON();
