@@ -201,7 +201,7 @@ describe('MockExpressResponse', function() {
 
         expect(response.statusCode).to.equal(302);
         expect(response.get('Location')).to.equal('/home');
-        
+
         done();
     });
 
