@@ -15,6 +15,7 @@ $ npm install --save-dev mock-express-response
 
 ## Usage
 ```js
+var ejs = require('ejs');
 var MockExpressRequest = require('mock-express-request');
 var MockExpressResponse = require('mock-express-response');
 
@@ -23,6 +24,7 @@ var response = new MockExpressResponse();
 
 // With options
 var response = new MockExpressResponse({
+    render:ejs.renderFile, //use ejs as render engine
     request: new MockExpressRequest({
     //request options
     ...
@@ -34,10 +36,13 @@ var response = new MockExpressResponse({
 //and properties
 
 //send json response
-response.json({user:{active:true}})
+response.json({user:{active:true}});
+
+//render a template
+response.render('user.ejs',{user:{active:true}});
 
 //send a response
-response.send('<p>Hi</p>')
+response.send('<p>Hi</p>');
 
 ...
 
