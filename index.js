@@ -2,6 +2,7 @@
 
 //dependencies
 var path = require('path');
+var contentDisposition = require('content-disposition');
 var escapeHtml = require('escape-html');
 var merge = require('utils-merge');
 var Utils = require(path.join(__dirname, 'utils'));
@@ -18,6 +19,7 @@ var normalizeTypes = Utils.normalizeTypes;
 var vary = require('vary');
 var sign = require('cookie-signature').sign;
 var cookie = require('cookie');
+var extname = path.extname;
 
 
 /**
@@ -643,23 +645,23 @@ MockExpressResponse.prototype.format = function(obj) {
     return this;
 };
 
-// /**
-//  * Set _Content-Disposition_ header to _attachment_ with optional `filename`.
-//  *
-//  * @param {String} filename
-//  * @return {ServerResponse}
-//  * @api public
-//  */
 
-// res.attachment = function attachment(filename) {
-//   if (filename) {
-//     this.type(extname(filename));
-//   }
+/**
+ * Set _Content-Disposition_ header to _attachment_ with optional `filename`.
+ *
+ * @param {String} filename
+ * @return {ServerResponse}
+ * @api public
+ */
+MockExpressResponse.prototype.attachment = function attachment(filename) {
+    if (filename) {
+        this.type(extname(filename));
+    }
 
-//   this.set('Content-Disposition', contentDisposition(filename));
+    this.set('Content-Disposition', contentDisposition(filename));
 
-//   return this;
-// };
+    return this;
+};
 
 
 /**

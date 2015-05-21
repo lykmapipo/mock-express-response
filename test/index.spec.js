@@ -51,7 +51,7 @@ describe('MockExpressResponse', function() {
         var response = new MockExpressResponse();
         response.type('json');
 
-        expect(response.get('content-type')).to.equal('application/json');
+        expect(response.get('content-type')).to.be.equal('application/json');
 
         done();
     });
@@ -110,8 +110,8 @@ describe('MockExpressResponse', function() {
         var response = new MockExpressResponse();
         response.sendStatus(200);
 
-        expect(response.statusCode).to.equal(200);
-        expect(response.statusMessage).to.equal('OK');
+        expect(response.statusCode).to.be.equal(200);
+        expect(response.statusMessage).to.be.equal('OK');
 
         done();
     });
@@ -189,7 +189,7 @@ describe('MockExpressResponse', function() {
         var response = new MockExpressResponse();
         response.location('http://example.com');
 
-        expect(response.get('Location')).to.equal('http://example.com');
+        expect(response.get('Location')).to.be.equal('http://example.com');
 
         done();
     });
@@ -199,8 +199,20 @@ describe('MockExpressResponse', function() {
         var response = new MockExpressResponse();
         response.redirect('/home');
 
-        expect(response.statusCode).to.equal(302);
-        expect(response.get('Location')).to.equal('/home');
+        expect(response.statusCode).to.be.equal(302);
+        expect(response.get('Location')).to.be.equal('/home');
+
+        done();
+    });
+
+
+    it('should be able to set _Content-Disposition_ header to _attachment_ with optional `filename`', function(done) {
+        var response = new MockExpressResponse();
+        response.attachment('home.pdf');
+
+        expect(response.get('content-type')).to.be.equal('application/pdf');
+        expect(response.get('content-disposition'))
+            .to.be.equal('attachment; filename="home.pdf"');
 
         done();
     });
