@@ -2,6 +2,7 @@
 
 //dependencies
 var path = require('path');
+var ejs = require('ejs');
 var expect = require('chai').expect;
 var MockExpressResponse = require(path.join(__dirname, '..', 'index'));
 
@@ -213,6 +214,28 @@ describe('MockExpressResponse', function() {
         expect(response.get('content-type')).to.be.equal('application/pdf');
         expect(response.get('content-disposition'))
             .to.be.equal('attachment; filename="home.pdf"');
+
+        done();
+    });
+
+
+    it('should be able to render `view` with the given `options` and optional callback `fn`', function(done) {
+        var response = new MockExpressResponse();
+        response.render('<p>Hi</p>');
+
+        expect(response.get('content-type')).to.be.equal('text/html; charset=utf-8');
+        expect(response._getString()).to.be.equal('<p>Hi</p>');
+
+        //make use of template engine
+        var _response = new MockExpressResponse({
+            render: ejs.renderFile
+        });
+
+        _response.render(path.join(__dirname, 'template.ejs'), {
+            name: 'Mock'
+        });
+
+        expect(_response._getString()).to.be.equal('<p>Hello Mock</p>');
 
         done();
     });

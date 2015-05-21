@@ -1,5 +1,6 @@
 'use strict';
 
+
 //dependencies
 var path = require('path');
 var contentDisposition = require('content-disposition');
@@ -33,7 +34,19 @@ function MockExpressResponse(options) {
     MockResponse.call(this, options.finish);
 
     this.app = {
-        'jsonp callback name': 'callback'
+        'jsonp callback name': 'callback',
+        render: function(view, data, fn) {
+            //default implementation is 
+            //to return uncompiled view
+            //
+            //this must me ovveriden by view engine
+            //of choice
+            if ('function' === typeof options.render) {
+                options.render(view, data, fn);
+            } else {
+                fn(null, view);
+            }
+        }
     };
 
     this.req = options.request || new MockExpressRequest({
@@ -939,42 +952,45 @@ MockExpressResponse.prototype.vary = function(field) {
 };
 
 
-// /**
-//  * Render `view` with the given `options` and optional callback `fn`.
-//  * When a callback function is given a response will _not_ be made
-//  * automatically, otherwise a response of _200_ and _text/html_ is given.
-//  *
-//  * Options:
-//  *
-//  *  - `cache`     boolean hinting to the engine it should cache
-//  *  - `filename`  filename of the view being rendered
-//  *
-//  * @api public
-//  */
+/**
+ * Render `view` with the given `options` and optional callback `fn`.
+ * When a callback function is given a response will _not_ be made
+ * automatically, otherwise a response of _200_ and _text/html_ is given.
+ *
+ * Options:
+ *
+ *  - `cache`     boolean hinting to the engine it should cache
+ *  - `filename`  filename of the view being rendered
+ *
+ * @api public
+ */
+MockExpressResponse.prototype.render = function(view, options, fn) {
+    options = options || {};
+    var self = this;
+    var req = this.req;
+    var app = this.app;
 
-// res.render = function(view, options, fn){
-//   options = options || {};
-//   var self = this;
-//   var req = this.req;
-//   var app = req.app;
+    // support callback function as second arg
+    if ('function' === typeof options) {
+        fn = options, options = {};
+    }
 
-//   // support callback function as second arg
-//   if ('function' == typeof options) {
-//     fn = options, options = {};
-//   }
+    // merge res.locals
+    options._locals = self.locals;
 
-//   // merge res.locals
-//   options._locals = self.locals;
+    // default callback to respond
+    fn = fn || function(err, str) {
+        if (err) {
+            return req.next(err);
+        }
 
-//   // default callback to respond
-//   fn = fn || function(err, str){
-//     if (err) return req.next(err);
-//     self.send(str);
-//   };
+        self.send(str);
+    };
 
-//   // render
-//   app.render(view, options, fn);
-// };
+    // render
+    app.render(view, options, fn);
+};
+
 
 // // pipe the send file stream
 // function sendfile(res, file, options, callback) {
