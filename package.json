@@ -1,6 +1,6 @@
 {
     "name": "mock-express-response",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Nodejs library to mock express http response",
     "keywords": [
         "express",
