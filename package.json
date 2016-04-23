@@ -48,8 +48,7 @@
         "grunt-mocha-test": "^0.12.7",
         "jshint-stylish": "^1.0.1",
         "lodash": "^3.9.1",
-        "mocha": "^2.2.4",
-        "mock-express-request": "^0.1.1"
+        "mocha": "^2.2.4"
     },
     "dependencies": {
         "content-disposition": "^0.5.0",
@@ -59,6 +58,7 @@
         "depd": "^1.0.1",
         "escape-html": "^1.0.1",
         "etag": "^1.6.0",
+        "mock-express-request": "^0.1.1",
         "mock-res": "^0.2.1",
         "on-finished": "^2.2.1",
         "proxy-addr": "^1.0.8",
