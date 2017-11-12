@@ -52,7 +52,8 @@ describe('MockExpressResponse', function() {
         var response = new MockExpressResponse();
         response.type('json');
 
-        expect(response.get('content-type')).to.be.equal('application/json');
+        expect(response.get('content-type')).to.be.equal('application/json; charset=utf-8');
+
 
         done();
     });
