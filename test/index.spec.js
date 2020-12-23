@@ -275,5 +275,14 @@ describe('MockExpressResponse', function() {
         done();
     });
 
+    it('should be able to set locals property', function(done) {
+        var response = new MockExpressResponse();
+        response.locals.email = 'john.doe@aol.com';
+
+        expect(response.locals.email).to.be.equal('john.doe@aol.com');
+
+        done();
+    });
+
 
 });
