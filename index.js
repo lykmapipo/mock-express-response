@@ -51,6 +51,8 @@ function MockExpressResponse(options) {
         }
     };
 
+    this.locals = options.locals || {};
+
     this.req = options.request || new MockExpressRequest({
         query: {}
     });
